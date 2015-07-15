@@ -28,8 +28,6 @@ import com.cenerino.jmxext.MBean;
 @RunWith(MockitoJUnitRunner.class)
 public class DynamicMBeanWrapperTest {
 
-    private DynamicMBeanWrapper mBeanWrapper;
-
     @Mock
     private Bean bean;
 
