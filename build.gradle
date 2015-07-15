@@ -6,8 +6,7 @@ repositories {
 }
 
 dependencies {
-    runtime 'org.apache.commons:commons-lang3:3.4'
-    compile 'javax.enterprise:cdi-api:1.1'
+    compile 'org.apache.commons:commons-lang3:3.4',	'javax.enterprise:cdi-api:1.1'
     testCompile 'junit:junit:4.12'
 }
 
