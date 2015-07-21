@@ -169,10 +169,6 @@ class DynamicMBeanWrapper implements DynamicMBean {
             throw new AttributeNotFoundException("Attribute '" + attribute + "' does not exist or is not writable.");
     }
 
-    private Annotation[] selectQualifiers(Annotation[] annotations) {
-        return Stream.of(annotations).filter(annotation -> beanManager.isQualifier(annotation.annotationType())).toArray(Annotation[]::new);
-    }
-
     @Override
     public Object invoke(String actionName, Object[] args, String[] signature) throws MBeanException, ReflectionException {
         try {
@@ -194,6 +190,10 @@ class DynamicMBeanWrapper implements DynamicMBean {
         Bean<?> resolved = beanManager.resolve(beans);
         CreationalContext<?> creationalContext = beanManager.createCreationalContext(resolved);
         return beanManager.getReference(resolved, clazz, creationalContext);
+    }
+
+    private Annotation[] selectQualifiers(Annotation[] annotations) {
+        return Stream.of(annotations).filter(annotation -> beanManager.isQualifier(annotation.annotationType())).toArray(Annotation[]::new);
     }
 
     @Override
