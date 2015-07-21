@@ -48,7 +48,7 @@ public class JmxExtension implements Extension {
             mBeansRegistry.put(mBeanName, wrapper);
             logger.debug("MBean '{}' registered successfully.", mBeanName);
         } catch (Exception e) {
-            logger.error(String.format("Class '%s' could not be registered as a JMX MBean.", mBeanName), e);
+            logger.error(String.format("Class '%s' could not be registered as an MBean.", mBeanName), e);
         }
     }
 
