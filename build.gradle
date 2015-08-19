@@ -1,13 +1,20 @@
-apply plugin: 'java'
-apply plugin: 'eclipse'
-
-repositories {
-    mavenCentral()
+allprojects {
+    apply plugin: 'eclipse'
+    group = 'com.cenerino.jmxext'
+    version = '1.0.0'
 }
 
-dependencies {
-    compile 'org.apache.commons:commons-lang3:3.4',	'javax.enterprise:cdi-api:1.1', 'org.slf4j:slf4j-api:1.7.12'
-    testCompile 'junit:junit:4.12', 'org.mockito:mockito-all:1.10.19', 'com.google.guava:guava:18.0'
+subprojects {
+    apply plugin: 'java'
+    repositories {
+        mavenCentral()
+    }
+    sourceCompatibility = 1.8
 }
 
-sourceCompatibility = 1.8
+project(':jmx-cdi-ext') {
+    dependencies {
+        compile 'org.apache.commons:commons-lang3:3.4',	'javax.enterprise:cdi-api:1.1', 'org.slf4j:slf4j-api:1.7.12'
+        testCompile 'junit:junit:4.12', 'org.mockito:mockito-all:1.10.19', 'com.google.guava:guava:18.0'
+    }
+}
