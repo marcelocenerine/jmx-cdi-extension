@@ -6,15 +6,32 @@ allprojects {
 
 subprojects {
     apply plugin: 'java'
+    sourceCompatibility = 1.8
+
     repositories {
         mavenCentral()
     }
-    sourceCompatibility = 1.8
+
+    dependencies {
+        testCompile 'junit:junit:4.12'
+    }
 }
 
 project(':jmx-cdi-ext') {
     dependencies {
-        compile 'org.apache.commons:commons-lang3:3.4',	'javax.enterprise:cdi-api:1.1', 'org.slf4j:slf4j-api:1.7.12'
-        testCompile 'junit:junit:4.12', 'org.mockito:mockito-all:1.10.19', 'com.google.guava:guava:18.0'
+        compile 'org.apache.commons:commons-lang3:3.4',
+                'javax.enterprise:cdi-api:1.1',
+                'org.slf4j:slf4j-api:1.7.12'
+        testCompile 'org.mockito:mockito-all:1.10.19',
+                    'com.google.guava:guava:18.0'
+    }
+}
+
+project(':testsuite') {
+    dependencies {
+        testCompile project(':jmx-cdi-ext'),
+                    'org.jboss.arquillian.junit:arquillian-junit-container:1.1.5.Final',
+                    'org.jboss.arquillian.container:arquillian-weld-se-embedded-1.1:1.0.0.CR7',
+                    'org.jboss.weld:weld-core:2.2.9.Final'
     }
 }
