@@ -34,11 +34,14 @@ import javax.management.MBeanOperationInfo;
 import javax.management.ReflectionException;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.cenerino.jmxext.MBean;
 
 class DynamicMBeanWrapper implements DynamicMBean {
 
+    private static final Logger logger = LoggerFactory.getLogger(DynamicMBeanWrapper.class);
     private Bean<?> bean;
     private BeanManager beanManager;
     private Map<String, MBeanAttributeInfo> mBeanAttributes = new HashMap<>();
@@ -65,7 +68,9 @@ class DynamicMBeanWrapper implements DynamicMBean {
             boolean isWritable = setMethod != null;
 
             if (isReadable || isWritable) {
-                mBeanAttributes.put(field.getName(), new MBeanAttributeInfo(field.getName(), fieldType.getName(), null, isReadable, isWritable, isMethod != null));
+                MBeanAttributeInfo attributeInfo = new MBeanAttributeInfo(field.getName(), fieldType.getName(), null, isReadable, isWritable, isMethod != null);
+                logger.debug("Exposing attribute {}", attributeInfo);
+                mBeanAttributes.put(field.getName(), attributeInfo);
                 mBeanAttributeAccessors.put(field.getName(), new AttributeAccessor(defaultIfNull(getMethod, isMethod), setMethod));
             }
         }
@@ -95,7 +100,9 @@ class DynamicMBeanWrapper implements DynamicMBean {
             if(isPublic(method.getModifiers())
                     && !isStatic(method.getModifiers())
                     && !method.getDeclaringClass().equals(Object.class)) {
-                mBeanOperations.add(new MBeanOperationInfo(method.getName(), method));
+                MBeanOperationInfo operationInfo = new MBeanOperationInfo(method.getName(), method);
+                logger.debug("Exposing operation {}", operationInfo);
+                mBeanOperations.add(operationInfo);
             }
         }
     }
@@ -107,7 +114,7 @@ class DynamicMBeanWrapper implements DynamicMBean {
         try {
             return mBeanAttributeAccessors.get(attribute).getter.invoke(instance());
         } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new ReflectionException(e);
+            throw new ReflectionException(e, "Attribute '" + attribute + "' could not be read.");
         }
     }
 
@@ -118,7 +125,9 @@ class DynamicMBeanWrapper implements DynamicMBean {
         for (String attribute : attributes) {
             try {
                 result.add(new Attribute(attribute, getAttribute(attribute)));
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                logger.error("Error to read attribute. It will not be added to the resulting list.", e);
+            }
         }
 
         return result;
@@ -153,7 +162,9 @@ class DynamicMBeanWrapper implements DynamicMBean {
             try {
                 setAttribute(attribute);
                 result.add(attribute);
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                logger.error("Error to set attribute value. It will not be added to the resulting list.", e);
+            }
         }
 
         return result;
