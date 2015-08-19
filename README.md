@@ -21,7 +21,7 @@ Simple CDI extension for JMX.
   </dependency>
 ```
 
-2) - Annotate your beans with @MBean:
+2) - Decorate your beans with the @MBean annotation (make sure they are also decorated with @ApplicationScoped or @Singleton, otherwise the result will not be what you may expect):
 
 ```java
     import javax.enterprise.context.ApplicationScoped;
@@ -47,3 +47,5 @@ Simple CDI extension for JMX.
         }
     }
 ```
+
+3) - Open JConsole (or any other JVM monitoring tool) to see what is going on inside your application :)
