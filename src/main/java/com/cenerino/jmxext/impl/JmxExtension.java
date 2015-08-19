@@ -5,10 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.enterprise.event.Observes;
-import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.BeforeShutdown;
-import javax.enterprise.inject.spi.Extension;
-import javax.enterprise.inject.spi.ProcessManagedBean;
+import javax.enterprise.inject.spi.*;
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServer;
@@ -24,25 +21,29 @@ public class JmxExtension implements Extension {
 
     private static final Logger logger = LoggerFactory.getLogger(JmxExtension.class);
     private Map<String, DynamicMBeanWrapper> mBeansRegistry = new HashMap<>();
+    private MBeanServer mBeanServer;
 
-    protected void processBean(@Observes ProcessManagedBean<?> event, final BeanManager bm) throws Exception {
+    void init(@Observes BeforeBeanDiscovery event) {
+        mBeanServer = ManagementFactory.getPlatformMBeanServer();
+    }
+
+    void processBean(@Observes ProcessManagedBean<?> event, final BeanManager beanManager) throws Exception {
         if (isDecoratedWithMBeanAnnotation(event)) {
-            registerMBean(event, bm);
+            registerMBean(event, beanManager);
         }
     }
 
-    private static boolean isDecoratedWithMBeanAnnotation(ProcessManagedBean<?> bean) {
-        return bean.getAnnotated().isAnnotationPresent(MBean.class);
+    private static boolean isDecoratedWithMBeanAnnotation(ProcessManagedBean<?> event) {
+        return event.getAnnotated().isAnnotationPresent(MBean.class);
     }
 
-    private void registerMBean(ProcessManagedBean<?> event, final BeanManager bm) {
+    private void registerMBean(ProcessManagedBean<?> event, final BeanManager beanManager) {
         Class<?> beanClass = event.getBean().getBeanClass();
         logger.debug("Identified class '{}' with annotation '{}.", beanClass.getName(), MBean.class.getName());
         String mBeanName = getObjectNameFor(beanClass);
 
         try {
-            DynamicMBeanWrapper wrapper = new DynamicMBeanWrapper(event.getBean(), bm);
-            MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+            DynamicMBeanWrapper wrapper = new DynamicMBeanWrapper(event.getBean(), beanManager);
             logger.debug("Registering MBean with name '{}' for class '{}'...", mBeanName, beanClass.getName());
             mBeanServer.registerMBean(wrapper, new ObjectName(mBeanName));
             mBeansRegistry.put(mBeanName, wrapper);
@@ -56,9 +57,7 @@ public class JmxExtension implements Extension {
         return String.format("%s:type=%s", beanClass.getPackage().getName(), beanClass.getSimpleName());
     }
 
-    protected void shutdown(@Observes final BeforeShutdown shutdown) {
-        MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-
+    void shutdown(@Observes final BeforeShutdown shutdown) {
         for (String mBeanName : mBeansRegistry.keySet()) {
             try {
                 logger.debug("Unregistering MBean '{}'...", mBeanName);
@@ -70,5 +69,9 @@ public class JmxExtension implements Extension {
         }
 
         mBeansRegistry.clear();
+    }
+
+    int getMBeanCount() {
+        return mBeansRegistry.size();
     }
 }
