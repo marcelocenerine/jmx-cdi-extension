@@ -34,4 +34,10 @@ project(':testsuite') {
                     'org.jboss.arquillian.container:arquillian-weld-se-embedded-1.1:1.0.0.CR7',
                     'org.jboss.weld:weld-core:2.2.9.Final'
     }
+
+    test {
+	    filter {
+            includeTestsMatching '*IntegTest'
+        }
+    }
 }

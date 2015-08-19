@@ -28,7 +28,7 @@ import com.cenerino.jmxext.beans.Order;
 import com.cenerino.jmxext.beans.Person;
 
 @RunWith(Arquillian.class)
-public class JmxExtensionTest {
+public class JmxExtensionIntegTest {
 
     @Inject
     private Person person;
