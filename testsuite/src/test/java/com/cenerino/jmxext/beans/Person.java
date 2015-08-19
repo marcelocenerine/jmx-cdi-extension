@@ -1,17 +1,16 @@
 package com.cenerino.jmxext.beans;
 
+import javax.enterprise.context.ApplicationScoped;
+
 import com.cenerino.jmxext.MBean;
 
+@ApplicationScoped
 @MBean(description="Person bean")
 public class Person {
 
-    private String name;
+    private String name = "anonymous";
     private int age;
-
-    public Person(String name, int age) {
-        this.name = name;
-        this.age = age;
-    }
+    private boolean fooInvoked;
 
     public String getName() {
         return name;
@@ -27,5 +26,13 @@ public class Person {
 
     public void setAge(int age) {
         this.age = age;
+    }
+
+    public void foo(String value) {
+        fooInvoked = true;
+    }
+
+    public boolean wasFooInvoked() {
+        return fooInvoked;
     }
 }
