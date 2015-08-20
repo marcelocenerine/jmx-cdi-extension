@@ -36,7 +36,7 @@ project(':testsuite') {
     }
 
     test {
-	    filter {
+        filter {
             includeTestsMatching '*IntegTest'
         }
     }
