@@ -24,28 +24,24 @@ Simple CDI extension for JMX.
 2) - Decorate your beans with the @MBean annotation (make sure they are also decorated with @ApplicationScoped or @Singleton, otherwise the result will not be what you may expect):
 
 ```java
-    import javax.enterprise.context.ApplicationScoped;
-    
-    import com.cenerino.jmxext.MBean;
-    
     @ApplicationScoped
     @MBean(description = "Session statistics")
-    public class SessionManager {
+    public class SessionStatistics {
     
-        private AtomicInteger activeSessionsCount;
+        private AtomicInteger sessionsCount = new AtomicInteger();
     
         public void incrementActiveSessions() {
-            activeSessionsCount.incrementAndGet();
+            sessionsCount.incrementAndGet();
         }
     
         public void decrementActiveSessions() {
-            activeSessionsCount.decrementAndGet();
+            sessionsCount.decrementAndGet();
         }
     
-        public AtomicInteger getActiveSessionsCount() {
-            return activeSessionsCount;
+        public AtomicInteger getSessionsCount() {
+            return sessionsCount;
         }
     }
 ```
 
-3) - Open JConsole (or any other JVM monitoring tool) to see what is going on inside your application :)
+3) - Open JConsole (or any other JVM monitoring tool) to see what is happening inside your application :)
