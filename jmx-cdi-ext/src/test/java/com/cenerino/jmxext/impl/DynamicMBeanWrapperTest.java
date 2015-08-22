@@ -9,6 +9,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.notNull;
 import static org.mockito.Mockito.mock;
 
+import java.beans.IntrospectionException;
 import java.util.List;
 import java.util.Set;
 
@@ -18,7 +19,6 @@ import javax.enterprise.inject.spi.BeanManager;
 import javax.management.Attribute;
 import javax.management.AttributeList;
 import javax.management.AttributeNotFoundException;
-import javax.management.IntrospectionException;
 import javax.management.InvalidAttributeValueException;
 import javax.management.MBeanInfo;
 
@@ -50,7 +50,7 @@ public class DynamicMBeanWrapperTest {
     }
 
     @Test
-    public void shouldReturnMBeanInfoForClassWithNoAttributesOrMethods() throws IntrospectionException {
+    public void shouldReturnMBeanInfoForClassWithoutAttributesOrMethods() throws IntrospectionException {
         configureBeanManagerToReturn(new Car());
 
         MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
@@ -61,7 +61,7 @@ public class DynamicMBeanWrapperTest {
     }
 
     @Test
-    public void shouldReturnMBeanInfoForClassWithSingleAttributeWithoutAccessorMethods() throws IntrospectionException {
+    public void shouldReturnMBeanInfoForClassWithAttributeWithoutAccessorMethods() throws IntrospectionException {
         configureBeanManagerToReturn(new Fruit());
 
         MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
@@ -71,7 +71,7 @@ public class DynamicMBeanWrapperTest {
     }
 
     @Test
-    public void shouldReturnMBeanInfoForClassWithSingleAttributeWithSetter() throws IntrospectionException {
+    public void shouldReturnMBeanInfoForClassWithAttributeWithSetter() throws IntrospectionException {
         configureBeanManagerToReturn(new Sport());
 
         MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
@@ -86,7 +86,7 @@ public class DynamicMBeanWrapperTest {
     }
 
     @Test
-    public void shouldReturnMBeanInfoForClassWithSingleAttributeWithGetter() throws IntrospectionException {
+    public void shouldReturnMBeanInfoForClassWithAttributeWithGetter() throws IntrospectionException {
         configureBeanManagerToReturn(new Country());
 
         MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
@@ -101,7 +101,7 @@ public class DynamicMBeanWrapperTest {
     }
 
     @Test
-    public void shouldReturnMBeanInfoForClassWithSingleAttributeWithIsMethodReturningPrimitiveBoolean() throws IntrospectionException {
+    public void shouldReturnMBeanInfoForClassWithBooleanIsGetterMethod() throws IntrospectionException {
         configureBeanManagerToReturn(new Person());
 
         MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
@@ -116,68 +116,8 @@ public class DynamicMBeanWrapperTest {
     }
 
     @Test
-    public void shouldReturnMBeanInfoForClassWithSingleAttributeWithIsMethodReturningWrapperBoolean() throws IntrospectionException {
-        configureBeanManagerToReturn(new Planet());
-
-        MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
-
-        assertThat(mBeanInfo.getDescription(), is("a planet"));
-        assertThat(mBeanInfo.getAttributes().length, is(1));
-        assertThat(mBeanInfo.getAttributes()[0].getName(), is("smallerThanEarth"));
-        assertThat(mBeanInfo.getAttributes()[0].getType(), is(Boolean.class.getName()));
-        assertThat(mBeanInfo.getAttributes()[0].isReadable(), is(true));
-        assertThat(mBeanInfo.getAttributes()[0].isWritable(), is(false));
-        assertThat(mBeanInfo.getAttributes()[0].isIs(), is(true));
-    }
-
-    @Test
-    public void shouldReturnMBeanInfoForClassWithSingleAttributeWithNonBooleanIsMethod() throws IntrospectionException {
-        configureBeanManagerToReturn(new Color());
-
-        MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
-
-        assertThat(mBeanInfo.getAttributes().length, is(0));
-    }
-
-    @Test
-    public void shouldReturnMBeanInfoForClassWithSingleStaticAttribute() throws IntrospectionException {
+    public void shouldReturnMBeanInfoForClassWithStaticAttribute() throws IntrospectionException {
         configureBeanManagerToReturn(new Math());
-
-        MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
-
-        assertThat(mBeanInfo.getAttributes().length, is(0));
-    }
-
-    @Test
-    public void shouldReturnMBeanInfoForClassWithSingleStaticAttributeAndGetterWhichReturnsTypeThatDoesNotMatchAttributeType() throws IntrospectionException {
-        configureBeanManagerToReturn(new Book());
-
-        MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
-
-        assertThat(mBeanInfo.getAttributes().length, is(0));
-    }
-
-    @Test
-    public void shouldReturnMBeanInfoForClassWithSingleStaticAttributeAndGetterTakingParameters() throws IntrospectionException {
-        configureBeanManagerToReturn(new City());
-
-        MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
-
-        assertThat(mBeanInfo.getAttributes().length, is(0));
-    }
-
-    @Test
-    public void shouldReturnMBeanInfoForClassWithSingleStaticAttributeAndSetterWhichReturnsTypeThatIsNotVoid() throws IntrospectionException {
-        configureBeanManagerToReturn(new Animal());
-
-        MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
-
-        assertThat(mBeanInfo.getAttributes().length, is(0));
-    }
-
-    @Test
-    public void shouldReturnMBeanInfoForClassWithSingleStaticAttributeAndSetterWhoseParameterDoesNotMatchAttributeType() throws IntrospectionException {
-        configureBeanManagerToReturn(new State());
 
         MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
 
@@ -264,7 +204,7 @@ public class DynamicMBeanWrapperTest {
         configureBeanManagerToReturn(player);
 
         DynamicMBeanWrapper mBean = new DynamicMBeanWrapper(bean, beanManager);
-        List<Attribute> attributes = mBean.getAttributes(new String[]{"name", "age"}).asList();
+        List<Attribute> attributes = mBean.getAttributes(new String[] { "name", "age" }).asList();
 
         assertThat(attributes.size(), is(2));
         assertThat(attributes.get(0).getName(), is("name"));
@@ -280,7 +220,7 @@ public class DynamicMBeanWrapperTest {
         configureBeanManagerToReturn(player);
 
         DynamicMBeanWrapper mBean = new DynamicMBeanWrapper(bean, beanManager);
-        List<Attribute> attributes = mBean.getAttributes(new String[]{"name", "nationality", "height"}).asList();
+        List<Attribute> attributes = mBean.getAttributes(new String[] { "name", "nationality", "height" }).asList();
 
         assertThat(attributes.size(), is(1));
         assertThat(attributes.get(0).getName(), is("name"));
@@ -295,6 +235,16 @@ public class DynamicMBeanWrapperTest {
         mBean.setAttribute(new Attribute("name", "Buffon"));
 
         assertThat(mBean.getAttribute("name"), is("Buffon"));
+    }
+
+    @Test
+    public void shouldSetAttributeValueUsingPrimitiveWrapperClasses() throws Exception {
+        configureBeanManagerToReturn(new Canada());
+
+        DynamicMBeanWrapper mBean = new DynamicMBeanWrapper(bean, beanManager);
+        mBean.setAttribute(new Attribute("population", new Integer(32000000)));
+
+        assertThat(mBean.getAttribute("population"), is(32000000));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -322,7 +272,7 @@ public class DynamicMBeanWrapperTest {
     }
 
     @Test(expected = InvalidAttributeValueException.class)
-    public void shouldNotSetValueToAttributeWhoseTypeDoesNotMatch() throws Exception {
+    public void shouldNotSetValueToAttributeIfValueIsNotCompatible() throws Exception {
         configureBeanManagerToReturn(new Player());
 
         DynamicMBeanWrapper mBean = new DynamicMBeanWrapper(bean, beanManager);
@@ -360,7 +310,6 @@ public class DynamicMBeanWrapperTest {
         given(bean.getBeanClass()).willReturn(object.getClass());
         given(beanManager.getReference(eq(bean), eq(object.getClass()), notNull(CreationalContext.class))).willReturn(object);
     }
-
 
     // Dummy classes used by the tests above
 
@@ -400,24 +349,6 @@ public class DynamicMBeanWrapperTest {
         }
     }
 
-    @MBean(description = "a planet")
-    private static class Planet {
-        private Boolean smallerThanEarth;
-
-        public Boolean isSmallerThanEarth() {
-            return smallerThanEarth;
-        }
-    }
-
-    @MBean(description = "a color")
-    private static class Color {
-        private boolean primitive;
-
-        public String isPrimitive() {
-            return Boolean.toString(primitive);
-        }
-    }
-
     @MBean(description = "math")
     private static class Math {
 
@@ -429,45 +360,6 @@ public class DynamicMBeanWrapperTest {
 
         public static void setPi(double pi) {
             Math.pi = pi;
-        }
-    }
-
-    @MBean(description = "a book")
-    private static class Book {
-        private int pages;
-
-        public Integer getPages() {
-            return pages;
-        }
-    }
-
-    @MBean(description = "a city")
-    private static class City {
-
-        private String name;
-
-        public String getName(String parameter) {
-            return name;
-        }
-    }
-
-    @MBean(description = "an animal")
-    private static class Animal {
-        private Color color;
-
-        public Color setColor(Color color) {
-            Color oldColor = this.color;
-            this.color = color;
-            return oldColor;
-        }
-    }
-
-    @MBean(description = "a state")
-    private static class State {
-        private int population;
-
-        public void setPopulation(Integer population) {
-            this.population = population;
         }
     }
 
@@ -485,7 +377,7 @@ public class DynamicMBeanWrapperTest {
         }
     }
 
-    @MBean(description="a appliance")
+    @MBean(description = "a appliance")
     private static class Appliance {
 
         private String manufacturer;
@@ -504,7 +396,7 @@ public class DynamicMBeanWrapperTest {
         }
     }
 
-    @MBean(description="a player")
+    @MBean(description = "a player")
     private static class Player {
 
         private String name;

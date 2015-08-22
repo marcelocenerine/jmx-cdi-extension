@@ -1,14 +1,13 @@
 package com.cenerino.jmxext.impl;
 
-import static java.lang.reflect.Modifier.isPublic;
-import static java.lang.reflect.Modifier.isStatic;
-import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
-import static org.apache.commons.lang3.StringUtils.capitalize;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.MethodDescriptor;
+import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -25,7 +24,6 @@ import javax.management.Attribute;
 import javax.management.AttributeList;
 import javax.management.AttributeNotFoundException;
 import javax.management.DynamicMBean;
-import javax.management.IntrospectionException;
 import javax.management.InvalidAttributeValueException;
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanException;
@@ -33,7 +31,6 @@ import javax.management.MBeanInfo;
 import javax.management.MBeanOperationInfo;
 import javax.management.ReflectionException;
 
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,68 +39,42 @@ import com.cenerino.jmxext.MBean;
 class DynamicMBeanWrapper implements DynamicMBean {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamicMBeanWrapper.class);
-    private Bean<?> bean;
+    private Class<?> beanClass;
     private BeanManager beanManager;
     private Map<String, MBeanAttributeInfo> mBeanAttributes = new HashMap<>();
     private Map<String, AttributeAccessor> mBeanAttributeAccessors = new HashMap<>();
     private List<MBeanOperationInfo> mBeanOperations = new ArrayList<>();
 
     public DynamicMBeanWrapper(Bean<?> bean, BeanManager beanManager) throws IntrospectionException {
-        this.bean = bean;
+        this.beanClass = bean.getBeanClass();
         this.beanManager = beanManager;
-        loadAttributesAndAccessorMethods();
-        loadOperations();
+        BeanInfo beanInfo = Introspector.getBeanInfo(beanClass, Object.class);
+        loadAttributesAndAccessorMethods(beanInfo);
+        loadOperations(beanInfo);
     }
 
-    private void loadAttributesAndAccessorMethods() throws IntrospectionException {
-        Class<?> clazz = bean.getBeanClass();
-
-        for (Field field : FieldUtils.getAllFields(clazz)) {
-            Class<?> fieldType = field.getType();
-            String capitalizedFieldName = capitalize(field.getName());
-            Method getMethod = findNonStaticPublicMethod(clazz, "get" + capitalizedFieldName, fieldType);
-            Method setMethod = findNonStaticPublicMethod(clazz, "set" + capitalizedFieldName, void.class, fieldType);
-            Method isMethod = isBooleanType(fieldType) ? findNonStaticPublicMethod(clazz, "is" + capitalizedFieldName, fieldType) : null;
-            boolean isReadable = getMethod != null || isMethod != null;
-            boolean isWritable = setMethod != null;
+    private void loadAttributesAndAccessorMethods(BeanInfo beanInfo) {
+        for (PropertyDescriptor prop : beanInfo.getPropertyDescriptors()) {
+            Method getter = prop.getReadMethod();
+            Method setter = prop.getWriteMethod();
+            boolean isReadable = getter != null;
+            boolean isWritable = setter != null;
+            boolean isIs = isReadable && getter.getName().startsWith("is");
 
             if (isReadable || isWritable) {
-                MBeanAttributeInfo attributeInfo = new MBeanAttributeInfo(field.getName(), fieldType.getName(), null, isReadable, isWritable, isMethod != null);
+                MBeanAttributeInfo attributeInfo = new MBeanAttributeInfo(prop.getName(), prop.getPropertyType().getName(), null, isReadable, isWritable, isIs);
                 logger.debug("Exposing attribute {}", attributeInfo);
-                mBeanAttributes.put(field.getName(), attributeInfo);
-                mBeanAttributeAccessors.put(field.getName(), new AttributeAccessor(defaultIfNull(getMethod, isMethod), setMethod));
+                mBeanAttributes.put(prop.getName(), attributeInfo);
+                mBeanAttributeAccessors.put(prop.getName(), new AttributeAccessor(getter, setter));
             }
         }
     }
 
-    private static Method findNonStaticPublicMethod(Class<?> clazz, String methodName, Class<?> returnType, Class<?>... parameterTypes) {
-        try {
-            Method method = clazz.getMethod(methodName, parameterTypes);
-
-            if (method != null
-                    && method.getReturnType().equals(returnType)
-                    && isPublic(method.getModifiers())
-                    && !isStatic(method.getModifiers())) {
-                return method;
-            }
-        } catch (NoSuchMethodException | SecurityException e) {}
-
-        return null;
-    }
-
-    private static boolean isBooleanType(Class<?> fieldType) {
-        return asList(boolean.class, Boolean.class).contains(fieldType);
-    }
-
-    private void loadOperations() {
-        for (Method method : bean.getBeanClass().getMethods()) {
-            if(isPublic(method.getModifiers())
-                    && !isStatic(method.getModifiers())
-                    && !method.getDeclaringClass().equals(Object.class)) {
-                MBeanOperationInfo operationInfo = new MBeanOperationInfo(method.getName(), method);
-                logger.debug("Exposing operation {}", operationInfo);
-                mBeanOperations.add(operationInfo);
-            }
+    private void loadOperations(BeanInfo beanInfo) {
+        for (MethodDescriptor methodDescr : beanInfo.getMethodDescriptors()) {
+            MBeanOperationInfo operationInfo = new MBeanOperationInfo(methodDescr.getName(), methodDescr.getMethod());
+            logger.debug("Exposing operation {}", operationInfo);
+            mBeanOperations.add(operationInfo);
         }
     }
 
@@ -195,12 +166,11 @@ class DynamicMBeanWrapper implements DynamicMBean {
     }
 
     private Object instance() {
-        Class<?> clazz = bean.getBeanClass();
-        Annotation[] qualifiers = selectQualifiers(clazz.getDeclaredAnnotations());
-        Set<Bean<?>> beans = beanManager.getBeans(clazz, qualifiers);
+        Annotation[] qualifiers = selectQualifiers(beanClass.getDeclaredAnnotations());
+        Set<Bean<?>> beans = beanManager.getBeans(beanClass, qualifiers);
         Bean<?> resolved = beanManager.resolve(beans);
         CreationalContext<?> creationalContext = beanManager.createCreationalContext(resolved);
-        return beanManager.getReference(resolved, clazz, creationalContext);
+        return beanManager.getReference(resolved, beanClass, creationalContext);
     }
 
     private Annotation[] selectQualifiers(Annotation[] annotations) {
@@ -209,12 +179,10 @@ class DynamicMBeanWrapper implements DynamicMBean {
 
     @Override
     public MBeanInfo getMBeanInfo() {
-        Class<?> clazz = bean.getBeanClass();
-        String description = clazz.getAnnotation(MBean.class).description();
+        String description = beanClass.getAnnotation(MBean.class).description();
         MBeanAttributeInfo[] attributes = mBeanAttributes.values().toArray(new MBeanAttributeInfo[mBeanAttributes.size()]);
         MBeanOperationInfo[] operations = mBeanOperations.toArray(new MBeanOperationInfo[mBeanOperations.size()]);
-
-        return new MBeanInfo(clazz.getName(), description, attributes, null, operations, null);
+        return new MBeanInfo(beanClass.getName(), description, attributes, null, operations, null);
     }
 
     private static class AttributeAccessor {
