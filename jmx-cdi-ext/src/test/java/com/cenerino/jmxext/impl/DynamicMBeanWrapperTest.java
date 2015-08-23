@@ -20,6 +20,7 @@ import javax.management.Attribute;
 import javax.management.AttributeList;
 import javax.management.AttributeNotFoundException;
 import javax.management.InvalidAttributeValueException;
+import javax.management.MBeanException;
 import javax.management.MBeanInfo;
 
 import org.junit.Before;
@@ -50,12 +51,20 @@ public class DynamicMBeanWrapperTest {
     }
 
     @Test
-    public void shouldReturnMBeanInfoForClassWithoutAttributesOrMethods() throws IntrospectionException {
+    public void shouldReturnMBeanDescription() throws IntrospectionException {
         configureBeanManagerToReturn(new Car());
 
         MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
 
         assertThat(mBeanInfo.getDescription(), is("a car"));
+    }
+
+    @Test
+    public void shouldReturnMBeanInfoForClassWithoutAttributesOrMethods() throws IntrospectionException {
+        configureBeanManagerToReturn(new Car());
+
+        MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
+
         assertThat(mBeanInfo.getAttributes().length, is(0));
         assertThat(mBeanInfo.getOperations().length, is(0));
     }
@@ -66,8 +75,8 @@ public class DynamicMBeanWrapperTest {
 
         MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
 
-        assertThat(mBeanInfo.getDescription(), is("a fruit"));
         assertThat(mBeanInfo.getAttributes().length, is(0));
+        assertThat(mBeanInfo.getOperations().length, is(0));
     }
 
     @Test
@@ -76,13 +85,14 @@ public class DynamicMBeanWrapperTest {
 
         MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
 
-        assertThat(mBeanInfo.getDescription(), is("a sport"));
         assertThat(mBeanInfo.getAttributes().length, is(1));
         assertThat(mBeanInfo.getAttributes()[0].getName(), is("name"));
         assertThat(mBeanInfo.getAttributes()[0].getType(), is(String.class.getName()));
         assertThat(mBeanInfo.getAttributes()[0].isReadable(), is(false));
         assertThat(mBeanInfo.getAttributes()[0].isWritable(), is(true));
         assertThat(mBeanInfo.getAttributes()[0].isIs(), is(false));
+        assertThat(mBeanInfo.getOperations().length, is(1));
+        assertThat(mBeanInfo.getOperations()[0].getName(), is("setName"));
     }
 
     @Test
@@ -91,13 +101,13 @@ public class DynamicMBeanWrapperTest {
 
         MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
 
-        assertThat(mBeanInfo.getDescription(), is("a country"));
         assertThat(mBeanInfo.getAttributes().length, is(1));
         assertThat(mBeanInfo.getAttributes()[0].getName(), is("president"));
         assertThat(mBeanInfo.getAttributes()[0].getType(), is(Person.class.getName()));
         assertThat(mBeanInfo.getAttributes()[0].isReadable(), is(true));
         assertThat(mBeanInfo.getAttributes()[0].isWritable(), is(false));
         assertThat(mBeanInfo.getAttributes()[0].isIs(), is(false));
+        assertThat(mBeanInfo.getOperations()[0].getName(), is("getPresident"));
     }
 
     @Test
@@ -106,22 +116,24 @@ public class DynamicMBeanWrapperTest {
 
         MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
 
-        assertThat(mBeanInfo.getDescription(), is("a person"));
         assertThat(mBeanInfo.getAttributes().length, is(1));
         assertThat(mBeanInfo.getAttributes()[0].getName(), is("retired"));
         assertThat(mBeanInfo.getAttributes()[0].getType(), is(boolean.class.getName()));
         assertThat(mBeanInfo.getAttributes()[0].isReadable(), is(true));
         assertThat(mBeanInfo.getAttributes()[0].isWritable(), is(false));
         assertThat(mBeanInfo.getAttributes()[0].isIs(), is(true));
+        assertThat(mBeanInfo.getOperations().length, is(1));
+        assertThat(mBeanInfo.getOperations()[0].getName(), is("isRetired"));
     }
 
     @Test
-    public void shouldReturnMBeanInfoForClassWithStaticAttribute() throws IntrospectionException {
+    public void shouldReturnMBeanInfoForClassWithStaticMembers() throws IntrospectionException {
         configureBeanManagerToReturn(new Math());
 
         MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
 
         assertThat(mBeanInfo.getAttributes().length, is(0));
+        assertThat(mBeanInfo.getOperations().length, is(2));
     }
 
     @Test
@@ -131,6 +143,7 @@ public class DynamicMBeanWrapperTest {
         MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
 
         assertThat(mBeanInfo.getAttributes().length, is(0));
+        assertThat(mBeanInfo.getOperations().length, is(0));
     }
 
     @Test
@@ -139,7 +152,6 @@ public class DynamicMBeanWrapperTest {
 
         MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
 
-        assertThat(mBeanInfo.getDescription(), is("canada"));
         assertThat(mBeanInfo.getAttributes().length, is(2));
         assertThat(mBeanInfo.getAttributes()[0].getName(), is("population"));
         assertThat(mBeanInfo.getAttributes()[0].getType(), is(int.class.getName()));
@@ -152,6 +164,11 @@ public class DynamicMBeanWrapperTest {
         assertThat(mBeanInfo.getAttributes()[1].isReadable(), is(true));
         assertThat(mBeanInfo.getAttributes()[1].isWritable(), is(false));
         assertThat(mBeanInfo.getAttributes()[1].isIs(), is(false));
+
+        assertThat(mBeanInfo.getOperations().length, is(3));
+        assertThat(mBeanInfo.getOperations()[0].getName(), is("setPopulation"));
+        assertThat(mBeanInfo.getOperations()[1].getName(), is("getPresident"));
+        assertThat(mBeanInfo.getOperations()[2].getName(), is("getPopulation"));
     }
 
     @Test
@@ -237,16 +254,6 @@ public class DynamicMBeanWrapperTest {
         assertThat(mBean.getAttribute("name"), is("Buffon"));
     }
 
-    @Test
-    public void shouldSetAttributeValueUsingPrimitiveWrapperClasses() throws Exception {
-        configureBeanManagerToReturn(new Canada());
-
-        DynamicMBeanWrapper mBean = new DynamicMBeanWrapper(bean, beanManager);
-        mBean.setAttribute(new Attribute("population", new Integer(32000000)));
-
-        assertThat(mBean.getAttribute("population"), is(32000000));
-    }
-
     @Test(expected = IllegalArgumentException.class)
     public void shouldNotSetAttributeIfNameIsNotInformed() throws Exception {
         configureBeanManagerToReturn(new Player());
@@ -306,6 +313,21 @@ public class DynamicMBeanWrapperTest {
         assertThat(returnedAttributes.get(0).getValue(), is("Drogba"));
     }
 
+    @Test
+    public void shouldInvokeOperation() {
+        // TODO
+    }
+
+    @Test(expected = MBeanException.class)
+    public void shouldFailIfOperationCannotBeFound() {
+        // TODO
+    }
+
+    @Test(expected = MBeanException.class)
+    public void shouldFailIfOperationIsNotPublic() {
+        // TODO
+    }
+
     private void configureBeanManagerToReturn(Object object) {
         given(bean.getBeanClass()).willReturn(object.getClass());
         given(beanManager.getReference(eq(bean), eq(object.getClass()), notNull(CreationalContext.class))).willReturn(object);
@@ -321,7 +343,7 @@ public class DynamicMBeanWrapperTest {
         private String color;
     }
 
-    @MBean(description = "a sport")
+    @MBean
     private static class Sport {
         private String name;
 
@@ -330,7 +352,7 @@ public class DynamicMBeanWrapperTest {
         }
     }
 
-    @MBean(description = "a country")
+    @MBean
     private static class Country {
         private Person president;
 
@@ -339,7 +361,7 @@ public class DynamicMBeanWrapperTest {
         }
     }
 
-    @MBean(description = "a person")
+    @MBean
     private static class Person {
 
         private boolean retired;
@@ -349,21 +371,21 @@ public class DynamicMBeanWrapperTest {
         }
     }
 
-    @MBean(description = "math")
+    @MBean
     private static class Math {
 
-        private static double pi = 3.1415;
+        public static final double PI = 3.1415;
 
         public static double getPi() {
-            return pi;
+            return PI;
         }
 
-        public static void setPi(double pi) {
-            Math.pi = pi;
+        public static int max(int n1, int n2) {
+            return java.lang.Math.max(n1, n2);
         }
     }
 
-    @MBean(description = "canada")
+    @MBean
     private static class Canada extends Country {
 
         private int population;
@@ -377,7 +399,7 @@ public class DynamicMBeanWrapperTest {
         }
     }
 
-    @MBean(description = "a appliance")
+    @MBean
     private static class Appliance {
 
         private String manufacturer;
@@ -396,7 +418,7 @@ public class DynamicMBeanWrapperTest {
         }
     }
 
-    @MBean(description = "a player")
+    @MBean
     private static class Player {
 
         private String name;
