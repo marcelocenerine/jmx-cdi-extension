@@ -3,6 +3,7 @@ package com.cenerino.jmxext.impl;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.eq;
@@ -20,7 +21,6 @@ import javax.management.Attribute;
 import javax.management.AttributeList;
 import javax.management.AttributeNotFoundException;
 import javax.management.InvalidAttributeValueException;
-import javax.management.MBeanException;
 import javax.management.MBeanInfo;
 
 import org.junit.Before;
@@ -291,7 +291,8 @@ public class DynamicMBeanWrapperTest {
         configureBeanManagerToReturn(new Player());
 
         DynamicMBeanWrapper mBean = new DynamicMBeanWrapper(bean, beanManager);
-        AttributeList attributes = new AttributeList(asList(new Attribute("name", "Lampard"), new Attribute("age", 37)));
+        AttributeList attributes = new AttributeList(asList(new Attribute("name", "Lampard"),
+                new Attribute("age", 37)));
         AttributeList returnedAttributes = mBean.setAttributes(attributes);
 
         assertThat(returnedAttributes.size(), is(2));
@@ -304,7 +305,8 @@ public class DynamicMBeanWrapperTest {
         configureBeanManagerToReturn(new Player());
 
         DynamicMBeanWrapper mBean = new DynamicMBeanWrapper(bean, beanManager);
-        AttributeList attributes = new AttributeList(asList(new Attribute("name", "Drogba"), new Attribute("nationality", "Ivorian"), new Attribute("height", 1.84)));
+        AttributeList attributes = new AttributeList(asList(new Attribute("name", "Drogba"),
+                new Attribute("nationality", "Ivorian"), new Attribute("height", 1.84)));
         List<Attribute> returnedAttributes = mBean.setAttributes(attributes).asList();
 
         assertThat(returnedAttributes.size(), is(1));
@@ -314,18 +316,44 @@ public class DynamicMBeanWrapperTest {
     }
 
     @Test
-    public void shouldInvokeOperation() {
-        // TODO
+    public void shouldInvokeOperationWithoutParameters() throws Exception {
+        configureBeanManagerToReturn(new Person());
+
+        new DynamicMBeanWrapper(bean, beanManager).invoke("isRetired", new Object[] {}, new String[] {});
     }
 
-    @Test(expected = MBeanException.class)
-    public void shouldFailIfOperationCannotBeFound() {
-        // TODO
+    @Test
+    public void shouldInvokeOperationWithParameters() throws Exception {
+        configureBeanManagerToReturn(new Player());
+
+        DynamicMBeanWrapper mBean = new DynamicMBeanWrapper(bean, beanManager);
+        Object result = mBean.invoke("setName", new Object[] { "Eto'o" }, new String[] {"java.lang.String"});
+
+        assertThat(result, is(nullValue()));
+        assertThat(mBean.getAttribute("name"), is("Eto'o"));
     }
 
-    @Test(expected = MBeanException.class)
-    public void shouldFailIfOperationIsNotPublic() {
-        // TODO
+    @Test
+    public void shouldInvokeStaticOperation() throws Exception {
+        configureBeanManagerToReturn(new Math());
+
+        Object result = new DynamicMBeanWrapper(bean, beanManager).invoke("max", new Object[] { new Integer(10), 50 }, new String[] { "int", "int" });
+
+        assertThat(result, is(50));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldFailIfOperationCannotBeFound() throws Exception {
+        configureBeanManagerToReturn(new Person());
+
+        new DynamicMBeanWrapper(bean, beanManager).invoke("isRetired", new Object[] { false }, new String[] { "java.lang.Boolean" });
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldFailIfOperationIsNotPublic() throws Exception {
+        configureBeanManagerToReturn(new Appliance());
+
+        new DynamicMBeanWrapper(bean, beanManager).invoke("getManufacturer", new Object[] {}, new String[] {});
     }
 
     private void configureBeanManagerToReturn(Object object) {
@@ -336,7 +364,8 @@ public class DynamicMBeanWrapperTest {
     // Dummy classes used by the tests above
 
     @MBean(description = "a car")
-    private static class Car {}
+    private static class Car {
+    }
 
     @MBean(description = "a fruit")
     private static class Fruit {

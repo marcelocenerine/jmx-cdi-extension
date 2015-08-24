@@ -5,15 +5,16 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
-import java.beans.MethodDescriptor;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -39,43 +40,67 @@ import com.cenerino.jmxext.MBean;
 class DynamicMBeanWrapper implements DynamicMBean {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamicMBeanWrapper.class);
-    private Class<?> beanClass;
     private BeanManager beanManager;
-    private Map<String, MBeanAttributeInfo> mBeanAttributes = new HashMap<>();
-    private Map<String, AttributeAccessor> mBeanAttributeAccessors = new HashMap<>();
-    private List<MBeanOperationInfo> mBeanOperations = new ArrayList<>();
+    private Class<?> beanClass;
+    private Map<String, PropertyDescriptor> exposedAttributes = new LinkedHashMap<>();
+    private List<Method> exposedMethods = new ArrayList<>();
+    private MBeanInfo mbeanInfo;
 
     public DynamicMBeanWrapper(Bean<?> bean, BeanManager beanManager) throws IntrospectionException {
         this.beanClass = bean.getBeanClass();
         this.beanManager = beanManager;
         BeanInfo beanInfo = Introspector.getBeanInfo(beanClass, Object.class);
-        loadAttributesAndAccessorMethods(beanInfo);
+        loadProperties(beanInfo);
         loadOperations(beanInfo);
+        createMBeanInfo();
     }
 
-    private void loadAttributesAndAccessorMethods(BeanInfo beanInfo) {
-        for (PropertyDescriptor prop : beanInfo.getPropertyDescriptors()) {
-            Method getter = prop.getReadMethod();
-            Method setter = prop.getWriteMethod();
-            boolean isReadable = getter != null;
-            boolean isWritable = setter != null;
-            boolean isIs = isReadable && getter.getName().startsWith("is");
-
-            if (isReadable || isWritable) {
-                MBeanAttributeInfo attributeInfo = new MBeanAttributeInfo(prop.getName(), prop.getPropertyType().getName(), null, isReadable, isWritable, isIs);
-                logger.debug("Exposing attribute {}", attributeInfo);
-                mBeanAttributes.put(prop.getName(), attributeInfo);
-                mBeanAttributeAccessors.put(prop.getName(), new AttributeAccessor(getter, setter));
-            }
-        }
+    private void loadProperties(BeanInfo beanInfo) {
+        Stream.of(beanInfo.getPropertyDescriptors())
+        .filter(prop -> isReadable(prop) || isWritable(prop))
+        .forEach(prop -> {
+            logger.debug("Attribute '{}' will be exposed in the MBean.", prop.getName());
+            exposedAttributes.put(prop.getName(), prop);
+        });
     }
 
     private void loadOperations(BeanInfo beanInfo) {
-        for (MethodDescriptor methodDescr : beanInfo.getMethodDescriptors()) {
-            MBeanOperationInfo operationInfo = new MBeanOperationInfo(methodDescr.getName(), methodDescr.getMethod());
-            logger.debug("Exposing operation {}", operationInfo);
-            mBeanOperations.add(operationInfo);
-        }
+        Stream.of(beanInfo.getMethodDescriptors())
+        .forEach(methodDesc -> {
+            logger.debug("Method '{}' will be exposed in the MBean.", methodDesc.getName());
+            exposedMethods.add(methodDesc.getMethod());
+        });
+    }
+
+    private void createMBeanInfo() {
+        String description = beanClass.getAnnotation(MBean.class).description();
+        MBeanAttributeInfo[] attributes = getAttributeInfos();
+        MBeanOperationInfo[] operations = getOperationInfos();
+        mbeanInfo = new MBeanInfo(beanClass.getName(), description, attributes, null, operations, null);
+    }
+
+    private MBeanOperationInfo[] getOperationInfos() {
+        return exposedMethods.stream()
+                .map(method -> new MBeanOperationInfo(method.getName(), method))
+                .toArray(MBeanOperationInfo[]::new);
+    }
+
+    private MBeanAttributeInfo[] getAttributeInfos() {
+        return exposedAttributes.values().stream()
+                .map(p -> new MBeanAttributeInfo(p.getName(), p.getPropertyType().getName(), null, isReadable(p), isWritable(p), isIs(p)))
+                .toArray(MBeanAttributeInfo[]::new);
+    }
+
+    private static boolean isWritable(PropertyDescriptor property) {
+        return property.getWriteMethod() != null;
+    }
+
+    private static boolean isReadable(PropertyDescriptor property) {
+        return property.getReadMethod() != null;
+    }
+
+    private static boolean isIs(PropertyDescriptor property) {
+        return isReadable(property) && property.getReadMethod().getName().startsWith("is");
     }
 
     @Override
@@ -83,7 +108,7 @@ class DynamicMBeanWrapper implements DynamicMBean {
         validateAttributeExistsAndIsReadable(attribute);
 
         try {
-            return mBeanAttributeAccessors.get(attribute).getter.invoke(instance());
+            return exposedAttributes.get(attribute).getReadMethod().invoke(instance());
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new ReflectionException(e, "Attribute '" + attribute + "' could not be read.");
         }
@@ -108,9 +133,9 @@ class DynamicMBeanWrapper implements DynamicMBean {
         if (isBlank(attribute))
             throw new IllegalArgumentException("Attribute name cannot be null.");
 
-        MBeanAttributeInfo attributeInfo = mBeanAttributes.get(attribute);
+        PropertyDescriptor property = exposedAttributes.get(attribute);
 
-        if (attributeInfo == null || !attributeInfo.isReadable())
+        if (property == null || !isReadable(property))
             throw new AttributeNotFoundException("Attribute '" + attribute + "' does not exist or is not readable.");
     }
 
@@ -119,9 +144,9 @@ class DynamicMBeanWrapper implements DynamicMBean {
         validateAttributeExistsAndIsWritable(attribute.getName());
 
         try {
-            mBeanAttributeAccessors.get(attribute.getName()).setter.invoke(instance(), attribute.getValue());
+            exposedAttributes.get(attribute.getName()).getWriteMethod().invoke(instance(), attribute.getValue());
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-            throw new InvalidAttributeValueException(String.format("Cannot set attribute '%s' to '%s'. Error: %s.", attribute.getName(), attribute.getValue(), e.getMessage()));
+            throw new InvalidAttributeValueException(String.format("Cannot set attribute '%s'. Error: %s.", attribute, e.getMessage()));
         }
     }
 
@@ -145,32 +170,39 @@ class DynamicMBeanWrapper implements DynamicMBean {
         if (isBlank(attribute))
             throw new IllegalArgumentException("Attribute name cannot be null.");
 
-        MBeanAttributeInfo attributeInfo = mBeanAttributes.get(attribute);
+        PropertyDescriptor property = exposedAttributes.get(attribute);
 
-        if (attributeInfo == null || !attributeInfo.isWritable())
+        if (property == null || !isWritable(property))
             throw new AttributeNotFoundException("Attribute '" + attribute + "' does not exist or is not writable.");
     }
 
     @Override
-    public Object invoke(String actionName, Object[] args, String[] signature) throws MBeanException, ReflectionException {
+    public Object invoke(String methodName, Object[] args, String[] signature) throws MBeanException, ReflectionException {
+        Optional<Method> method = exposedMethods.stream().filter(m -> methodMatches(m, methodName, signature)).findFirst();
+
+        if (!method.isPresent())
+            throw new IllegalArgumentException(String.format("Method '%s' with arg types %s not found.", methodName, Arrays.toString(signature)));
+
         try {
-            Object instance = instance();
-            return instance.getClass().getMethod(actionName, getArgumentTypes(args)).invoke(instance, args);
+            return method.get().invoke(instance(), args);
         } catch (Exception e) {
             throw new MBeanException(e);
         }
     }
 
-    private static Class<?>[] getArgumentTypes(Object...args) {
-        return Stream.of(args).map(param -> param.getClass()).toArray(Class<?>[]::new);
+    private boolean methodMatches(Method method, String name, String[] parameterTypes) {
+        if (!method.getName().equals(name)) return false;
+
+        String[] signature = Stream.of(method.getParameterTypes()).map(Class::getName).toArray(String[]::new);
+        return Arrays.equals(signature, parameterTypes);
     }
 
     private Object instance() {
         Annotation[] qualifiers = selectQualifiers(beanClass.getDeclaredAnnotations());
         Set<Bean<?>> beans = beanManager.getBeans(beanClass, qualifiers);
         Bean<?> resolved = beanManager.resolve(beans);
-        CreationalContext<?> creationalContext = beanManager.createCreationalContext(resolved);
-        return beanManager.getReference(resolved, beanClass, creationalContext);
+        CreationalContext<?> context = beanManager.createCreationalContext(resolved);
+        return beanManager.getReference(resolved, beanClass, context);
     }
 
     private Annotation[] selectQualifiers(Annotation[] annotations) {
@@ -179,20 +211,6 @@ class DynamicMBeanWrapper implements DynamicMBean {
 
     @Override
     public MBeanInfo getMBeanInfo() {
-        String description = beanClass.getAnnotation(MBean.class).description();
-        MBeanAttributeInfo[] attributes = mBeanAttributes.values().toArray(new MBeanAttributeInfo[mBeanAttributes.size()]);
-        MBeanOperationInfo[] operations = mBeanOperations.toArray(new MBeanOperationInfo[mBeanOperations.size()]);
-        return new MBeanInfo(beanClass.getName(), description, attributes, null, operations, null);
-    }
-
-    private static class AttributeAccessor {
-
-        private Method getter;
-        private Method setter;
-
-        public AttributeAccessor(Method getter, Method setter) {
-            this.getter = getter;
-            this.setter = setter;
-        }
+        return mbeanInfo;
     }
 }
