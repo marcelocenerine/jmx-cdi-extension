@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/marcelocenerine/jmx-cdi-extension.svg)](https://travis-ci.org/marcelocenerine/jmx-cdi-extension)
 # jmx-cdi-extension
 Simple CDI extension for JMX.
 
