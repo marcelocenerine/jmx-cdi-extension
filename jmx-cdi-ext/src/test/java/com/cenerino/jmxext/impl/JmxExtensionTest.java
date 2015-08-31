@@ -4,21 +4,35 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Answers.RETURNS_DEEP_STUBS;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.notNull;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
-import javax.enterprise.inject.spi.*;
+import java.beans.IntrospectionException;
+
+import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
+import javax.enterprise.inject.spi.BeforeShutdown;
+import javax.enterprise.inject.spi.ProcessManagedBean;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import org.junit.*;
+import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.*;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.cenerino.jmxext.MBean;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(DynamicMBeanWrapper.class)
 @SuppressWarnings("rawtypes")
 public class JmxExtensionTest {
 
@@ -35,7 +49,10 @@ public class JmxExtensionTest {
     private JmxExtension jmxExtension;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IntrospectionException {
+        mockStatic(DynamicMBeanWrapper.class);
+        given(DynamicMBeanWrapper.wrap(notNull(Bean.class), notNull(BeanManager.class))).willReturn(mock(DynamicMBeanWrapper.class));
+
         given(event.getBean().getBeanClass()).willReturn(getClass());
     }
 

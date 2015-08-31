@@ -46,7 +46,11 @@ class DynamicMBeanWrapper implements DynamicMBean {
     private List<Method> exposedMethods = new ArrayList<>();
     private MBeanInfo mbeanInfo;
 
-    public DynamicMBeanWrapper(Bean<?> bean, BeanManager beanManager) throws IntrospectionException {
+    public static DynamicMBeanWrapper wrap(Bean<?> bean, BeanManager beanManager) throws IntrospectionException {
+        return new DynamicMBeanWrapper(bean, beanManager);
+    }
+
+    private DynamicMBeanWrapper(Bean<?> bean, BeanManager beanManager) throws IntrospectionException {
         this.beanClass = bean.getBeanClass();
         this.beanManager = beanManager;
         BeanInfo beanInfo = Introspector.getBeanInfo(beanClass, Object.class);

@@ -5,7 +5,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.enterprise.event.Observes;
-import javax.enterprise.inject.spi.*;
+import javax.enterprise.inject.spi.BeanManager;
+import javax.enterprise.inject.spi.BeforeBeanDiscovery;
+import javax.enterprise.inject.spi.BeforeShutdown;
+import javax.enterprise.inject.spi.Extension;
+import javax.enterprise.inject.spi.ProcessManagedBean;
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServer;
@@ -43,7 +47,7 @@ class JmxExtension implements Extension {
         String mBeanName = getObjectNameFor(beanClass);
 
         try {
-            DynamicMBeanWrapper wrapper = new DynamicMBeanWrapper(event.getBean(), beanManager);
+            DynamicMBeanWrapper wrapper = DynamicMBeanWrapper.wrap(event.getBean(), beanManager);
             logger.debug("Registering MBean with name '{}' for class '{}'...", mBeanName, beanClass.getName());
             mBeanServer.registerMBean(wrapper, new ObjectName(mBeanName));
             mBeansRegistry.put(mBeanName, wrapper);

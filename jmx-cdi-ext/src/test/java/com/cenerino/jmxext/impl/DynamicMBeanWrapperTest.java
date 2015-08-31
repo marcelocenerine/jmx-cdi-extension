@@ -54,7 +54,7 @@ public class DynamicMBeanWrapperTest {
     public void shouldReturnMBeanDescription() throws IntrospectionException {
         configureBeanManagerToReturn(new Car());
 
-        MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
+        MBeanInfo mBeanInfo = DynamicMBeanWrapper.wrap(bean, beanManager).getMBeanInfo();
 
         assertThat(mBeanInfo.getDescription(), is("a car"));
     }
@@ -63,7 +63,7 @@ public class DynamicMBeanWrapperTest {
     public void shouldReturnMBeanInfoForClassWithoutAttributesOrMethods() throws IntrospectionException {
         configureBeanManagerToReturn(new Car());
 
-        MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
+        MBeanInfo mBeanInfo = DynamicMBeanWrapper.wrap(bean, beanManager).getMBeanInfo();
 
         assertThat(mBeanInfo.getAttributes().length, is(0));
         assertThat(mBeanInfo.getOperations().length, is(0));
@@ -73,7 +73,7 @@ public class DynamicMBeanWrapperTest {
     public void shouldReturnMBeanInfoForClassWithAttributeWithoutAccessorMethods() throws IntrospectionException {
         configureBeanManagerToReturn(new Fruit());
 
-        MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
+        MBeanInfo mBeanInfo = DynamicMBeanWrapper.wrap(bean, beanManager).getMBeanInfo();
 
         assertThat(mBeanInfo.getAttributes().length, is(0));
         assertThat(mBeanInfo.getOperations().length, is(0));
@@ -83,7 +83,7 @@ public class DynamicMBeanWrapperTest {
     public void shouldReturnMBeanInfoForClassWithAttributeWithSetter() throws IntrospectionException {
         configureBeanManagerToReturn(new Sport());
 
-        MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
+        MBeanInfo mBeanInfo = DynamicMBeanWrapper.wrap(bean, beanManager).getMBeanInfo();
 
         assertThat(mBeanInfo.getAttributes().length, is(1));
         assertThat(mBeanInfo.getAttributes()[0].getName(), is("name"));
@@ -99,7 +99,7 @@ public class DynamicMBeanWrapperTest {
     public void shouldReturnMBeanInfoForClassWithAttributeWithGetter() throws IntrospectionException {
         configureBeanManagerToReturn(new Country());
 
-        MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
+        MBeanInfo mBeanInfo = DynamicMBeanWrapper.wrap(bean, beanManager).getMBeanInfo();
 
         assertThat(mBeanInfo.getAttributes().length, is(1));
         assertThat(mBeanInfo.getAttributes()[0].getName(), is("president"));
@@ -114,7 +114,7 @@ public class DynamicMBeanWrapperTest {
     public void shouldReturnMBeanInfoForClassWithBooleanIsGetterMethod() throws IntrospectionException {
         configureBeanManagerToReturn(new Person());
 
-        MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
+        MBeanInfo mBeanInfo = DynamicMBeanWrapper.wrap(bean, beanManager).getMBeanInfo();
 
         assertThat(mBeanInfo.getAttributes().length, is(1));
         assertThat(mBeanInfo.getAttributes()[0].getName(), is("retired"));
@@ -130,7 +130,7 @@ public class DynamicMBeanWrapperTest {
     public void shouldReturnMBeanInfoForClassWithStaticMembers() throws IntrospectionException {
         configureBeanManagerToReturn(new Math());
 
-        MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
+        MBeanInfo mBeanInfo = DynamicMBeanWrapper.wrap(bean, beanManager).getMBeanInfo();
 
         assertThat(mBeanInfo.getAttributes().length, is(0));
         assertThat(mBeanInfo.getOperations().length, is(2));
@@ -140,7 +140,7 @@ public class DynamicMBeanWrapperTest {
     public void shouldReturnMBeanInfoForClassWithNoPublicAccessorForItsAttributes() throws IntrospectionException {
         configureBeanManagerToReturn(new Appliance());
 
-        MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
+        MBeanInfo mBeanInfo = DynamicMBeanWrapper.wrap(bean, beanManager).getMBeanInfo();
 
         assertThat(mBeanInfo.getAttributes().length, is(0));
         assertThat(mBeanInfo.getOperations().length, is(0));
@@ -150,7 +150,7 @@ public class DynamicMBeanWrapperTest {
     public void shouldReturnMBeanInfoForClassWithInheritedAttributes() throws IntrospectionException {
         configureBeanManagerToReturn(new Canada());
 
-        MBeanInfo mBeanInfo = new DynamicMBeanWrapper(bean, beanManager).getMBeanInfo();
+        MBeanInfo mBeanInfo = DynamicMBeanWrapper.wrap(bean, beanManager).getMBeanInfo();
 
         assertThat(mBeanInfo.getAttributes().length, is(2));
         assertThat(mBeanInfo.getAttributes()[0].getName(), is("population"));
@@ -177,7 +177,7 @@ public class DynamicMBeanWrapperTest {
         player.name = "Ibrahimovic";
         configureBeanManagerToReturn(player);
 
-        DynamicMBeanWrapper mBean = new DynamicMBeanWrapper(bean, beanManager);
+        DynamicMBeanWrapper mBean = DynamicMBeanWrapper.wrap(bean, beanManager);
 
         assertThat(mBean.getAttribute("name"), is("Ibrahimovic"));
     }
@@ -188,7 +188,7 @@ public class DynamicMBeanWrapperTest {
         person.retired = true;
         configureBeanManagerToReturn(person);
 
-        DynamicMBeanWrapper mBean = new DynamicMBeanWrapper(bean, beanManager);
+        DynamicMBeanWrapper mBean = DynamicMBeanWrapper.wrap(bean, beanManager);
 
         assertThat(mBean.getAttribute("retired"), is(true));
     }
@@ -199,7 +199,7 @@ public class DynamicMBeanWrapperTest {
         appliance.manufacturer = "Bosch";
         configureBeanManagerToReturn(appliance);
 
-        DynamicMBeanWrapper mBean = new DynamicMBeanWrapper(bean, beanManager);
+        DynamicMBeanWrapper mBean = DynamicMBeanWrapper.wrap(bean, beanManager);
 
         mBean.getAttribute("manufacturer");
     }
@@ -208,7 +208,7 @@ public class DynamicMBeanWrapperTest {
     public void shouldNotReturnAttributeIfInformedAttributeNameIsInvalid() throws Exception {
         configureBeanManagerToReturn(new Appliance());
 
-        DynamicMBeanWrapper mBean = new DynamicMBeanWrapper(bean, beanManager);
+        DynamicMBeanWrapper mBean = DynamicMBeanWrapper.wrap(bean, beanManager);
 
         mBean.getAttribute(null);
     }
@@ -220,7 +220,7 @@ public class DynamicMBeanWrapperTest {
         player.age = 33;
         configureBeanManagerToReturn(player);
 
-        DynamicMBeanWrapper mBean = new DynamicMBeanWrapper(bean, beanManager);
+        DynamicMBeanWrapper mBean = DynamicMBeanWrapper.wrap(bean, beanManager);
         List<Attribute> attributes = mBean.getAttributes(new String[] { "name", "age" }).asList();
 
         assertThat(attributes.size(), is(2));
@@ -236,7 +236,7 @@ public class DynamicMBeanWrapperTest {
         player.name = "Pirlo";
         configureBeanManagerToReturn(player);
 
-        DynamicMBeanWrapper mBean = new DynamicMBeanWrapper(bean, beanManager);
+        DynamicMBeanWrapper mBean = DynamicMBeanWrapper.wrap(bean, beanManager);
         List<Attribute> attributes = mBean.getAttributes(new String[] { "name", "nationality", "height" }).asList();
 
         assertThat(attributes.size(), is(1));
@@ -248,7 +248,7 @@ public class DynamicMBeanWrapperTest {
     public void shouldSetAttributeValue() throws Exception {
         configureBeanManagerToReturn(new Player());
 
-        DynamicMBeanWrapper mBean = new DynamicMBeanWrapper(bean, beanManager);
+        DynamicMBeanWrapper mBean = DynamicMBeanWrapper.wrap(bean, beanManager);
         mBean.setAttribute(new Attribute("name", "Buffon"));
 
         assertThat(mBean.getAttribute("name"), is("Buffon"));
@@ -258,7 +258,7 @@ public class DynamicMBeanWrapperTest {
     public void shouldNotSetAttributeIfNameIsNotInformed() throws Exception {
         configureBeanManagerToReturn(new Player());
 
-        DynamicMBeanWrapper mBean = new DynamicMBeanWrapper(bean, beanManager);
+        DynamicMBeanWrapper mBean = DynamicMBeanWrapper.wrap(bean, beanManager);
         mBean.setAttribute(new Attribute("", "Buffon"));
     }
 
@@ -266,7 +266,7 @@ public class DynamicMBeanWrapperTest {
     public void shouldNotSetValueToAttributeThatDoesNotExist() throws Exception {
         configureBeanManagerToReturn(new Player());
 
-        DynamicMBeanWrapper mBean = new DynamicMBeanWrapper(bean, beanManager);
+        DynamicMBeanWrapper mBean = DynamicMBeanWrapper.wrap(bean, beanManager);
         mBean.setAttribute(new Attribute("nationality", "Italian"));
     }
 
@@ -274,7 +274,7 @@ public class DynamicMBeanWrapperTest {
     public void shouldNotSetValueToAttributeThatIsNotWritable() throws Exception {
         configureBeanManagerToReturn(new Person());
 
-        DynamicMBeanWrapper mBean = new DynamicMBeanWrapper(bean, beanManager);
+        DynamicMBeanWrapper mBean = DynamicMBeanWrapper.wrap(bean, beanManager);
         mBean.setAttribute(new Attribute("retired", false));
     }
 
@@ -282,7 +282,7 @@ public class DynamicMBeanWrapperTest {
     public void shouldNotSetValueToAttributeIfValueIsNotCompatible() throws Exception {
         configureBeanManagerToReturn(new Player());
 
-        DynamicMBeanWrapper mBean = new DynamicMBeanWrapper(bean, beanManager);
+        DynamicMBeanWrapper mBean = DynamicMBeanWrapper.wrap(bean, beanManager);
         mBean.setAttribute(new Attribute("name", new Object()));
     }
 
@@ -290,9 +290,8 @@ public class DynamicMBeanWrapperTest {
     public void shouldSetValueToMultipleAttributes() throws Exception {
         configureBeanManagerToReturn(new Player());
 
-        DynamicMBeanWrapper mBean = new DynamicMBeanWrapper(bean, beanManager);
-        AttributeList attributes = new AttributeList(asList(new Attribute("name", "Lampard"),
-                new Attribute("age", 37)));
+        DynamicMBeanWrapper mBean = DynamicMBeanWrapper.wrap(bean, beanManager);
+        AttributeList attributes = new AttributeList(asList(new Attribute("name", "Lampard"), new Attribute("age", 37)));
         AttributeList returnedAttributes = mBean.setAttributes(attributes);
 
         assertThat(returnedAttributes.size(), is(2));
@@ -304,9 +303,8 @@ public class DynamicMBeanWrapperTest {
     public void shouldSetValueToMultipleAttributesIgnoringTheOnesThatFail() throws Exception {
         configureBeanManagerToReturn(new Player());
 
-        DynamicMBeanWrapper mBean = new DynamicMBeanWrapper(bean, beanManager);
-        AttributeList attributes = new AttributeList(asList(new Attribute("name", "Drogba"),
-                new Attribute("nationality", "Ivorian"), new Attribute("height", 1.84)));
+        DynamicMBeanWrapper mBean = DynamicMBeanWrapper.wrap(bean, beanManager);
+        AttributeList attributes = new AttributeList(asList(new Attribute("name", "Drogba"), new Attribute("nationality", "Ivorian"), new Attribute("height", 1.84)));
         List<Attribute> returnedAttributes = mBean.setAttributes(attributes).asList();
 
         assertThat(returnedAttributes.size(), is(1));
@@ -319,15 +317,15 @@ public class DynamicMBeanWrapperTest {
     public void shouldInvokeOperationWithoutParameters() throws Exception {
         configureBeanManagerToReturn(new Person());
 
-        new DynamicMBeanWrapper(bean, beanManager).invoke("isRetired", new Object[] {}, new String[] {});
+        DynamicMBeanWrapper.wrap(bean, beanManager).invoke("isRetired", new Object[] {}, new String[] {});
     }
 
     @Test
     public void shouldInvokeOperationWithParameters() throws Exception {
         configureBeanManagerToReturn(new Player());
 
-        DynamicMBeanWrapper mBean = new DynamicMBeanWrapper(bean, beanManager);
-        Object result = mBean.invoke("setName", new Object[] { "Eto'o" }, new String[] {"java.lang.String"});
+        DynamicMBeanWrapper mBean = DynamicMBeanWrapper.wrap(bean, beanManager);
+        Object result = mBean.invoke("setName", new Object[] { "Eto'o" }, new String[] { "java.lang.String" });
 
         assertThat(result, is(nullValue()));
         assertThat(mBean.getAttribute("name"), is("Eto'o"));
@@ -337,7 +335,7 @@ public class DynamicMBeanWrapperTest {
     public void shouldInvokeStaticOperation() throws Exception {
         configureBeanManagerToReturn(new Math());
 
-        Object result = new DynamicMBeanWrapper(bean, beanManager).invoke("max", new Object[] { new Integer(10), 50 }, new String[] { "int", "int" });
+        Object result = DynamicMBeanWrapper.wrap(bean, beanManager).invoke("max", new Object[] { new Integer(10), 50 }, new String[] { "int", "int" });
 
         assertThat(result, is(50));
     }
@@ -346,14 +344,14 @@ public class DynamicMBeanWrapperTest {
     public void shouldFailIfOperationCannotBeFound() throws Exception {
         configureBeanManagerToReturn(new Person());
 
-        new DynamicMBeanWrapper(bean, beanManager).invoke("isRetired", new Object[] { false }, new String[] { "java.lang.Boolean" });
+        DynamicMBeanWrapper.wrap(bean, beanManager).invoke("isRetired", new Object[] { false }, new String[] { "java.lang.Boolean" });
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldFailIfOperationIsNotPublic() throws Exception {
         configureBeanManagerToReturn(new Appliance());
 
-        new DynamicMBeanWrapper(bean, beanManager).invoke("getManufacturer", new Object[] {}, new String[] {});
+        DynamicMBeanWrapper.wrap(bean, beanManager).invoke("getManufacturer", new Object[] {}, new String[] {});
     }
 
     private void configureBeanManagerToReturn(Object object) {
@@ -364,8 +362,7 @@ public class DynamicMBeanWrapperTest {
     // Dummy classes used by the tests above
 
     @MBean(description = "a car")
-    private static class Car {
-    }
+    private static class Car {}
 
     @MBean(description = "a fruit")
     private static class Fruit {
