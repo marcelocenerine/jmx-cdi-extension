@@ -1,6 +1,5 @@
 package com.cenerino.jmxext.impl;
 
-import static com.google.common.collect.Sets.newHashSet;
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -27,6 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.internal.util.collections.Sets;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.cenerino.jmxext.MBean;
@@ -44,7 +44,7 @@ public class DynamicMBeanWrapperTest {
     @Before
     public void setUp() throws IntrospectionException {
         given(beanManager.isQualifier(MBean.class)).willReturn(true);
-        Set<Bean<?>> beans = newHashSet(bean);
+        Set<Bean<?>> beans = Sets.newSet(bean);
         given(beanManager.getBeans(notNull(Class.class), notNull(MBean.class))).willReturn(beans);
         given(beanManager.resolve(beans)).willReturn(bean);
         given(beanManager.createCreationalContext(bean)).willReturn(mock(CreationalContext.class));
