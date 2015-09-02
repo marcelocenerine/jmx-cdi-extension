@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/marcelocenerine/jmx-cdi-extension.svg)](https://travis-ci.org/marcelocenerine/jmx-cdi-extension)  [![Coverage Status](https://coveralls.io/repos/marcelocenerine/jmx-cdi-extension/badge.svg?branch=master&service=github)](https://coveralls.io/github/marcelocenerine/jmx-cdi-extension?branch=master)
+[![Build Status](https://travis-ci.org/marcelocenerine/jmx-cdi-extension.svg)](https://travis-ci.org/marcelocenerine/jmx-cdi-extension)  [![Coverage Status](https://coveralls.io/repos/marcelocenerine/jmx-cdi-extension/badge.svg?branch=master&service=github&)](https://coveralls.io/github/marcelocenerine/jmx-cdi-extension?branch=master)
 # jmx-cdi-extension
 Simple CDI extension for JMX.
 
