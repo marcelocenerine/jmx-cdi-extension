@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import com.cenerino.jmxext.MBean;
 
-class JmxExtension implements Extension {
+public class JmxExtension implements Extension {
 
     private static final Logger logger = LoggerFactory.getLogger(JmxExtension.class);
     private Map<String, DynamicMBeanWrapper> mBeansRegistry = new HashMap<>();
