@@ -1,9 +1,7 @@
 package com.cenerino.jmxext.impl;
 
 import static java.util.Arrays.asList;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.notNull;
@@ -56,7 +54,7 @@ public class DynamicMBeanWrapperTest {
 
         MBeanInfo mBeanInfo = DynamicMBeanWrapper.wrap(bean, beanManager).getMBeanInfo();
 
-        assertThat(mBeanInfo.getDescription(), is("a car"));
+        assertThat(mBeanInfo.getDescription()).isEqualTo("a car");
     }
 
     @Test
@@ -65,8 +63,8 @@ public class DynamicMBeanWrapperTest {
 
         MBeanInfo mBeanInfo = DynamicMBeanWrapper.wrap(bean, beanManager).getMBeanInfo();
 
-        assertThat(mBeanInfo.getAttributes().length, is(0));
-        assertThat(mBeanInfo.getOperations().length, is(0));
+        assertThat(mBeanInfo.getAttributes()).isEmpty();
+        assertThat(mBeanInfo.getOperations()).isEmpty();
     }
 
     @Test
@@ -75,8 +73,8 @@ public class DynamicMBeanWrapperTest {
 
         MBeanInfo mBeanInfo = DynamicMBeanWrapper.wrap(bean, beanManager).getMBeanInfo();
 
-        assertThat(mBeanInfo.getAttributes().length, is(0));
-        assertThat(mBeanInfo.getOperations().length, is(0));
+        assertThat(mBeanInfo.getAttributes()).isEmpty();
+        assertThat(mBeanInfo.getOperations()).isEmpty();
     }
 
     @Test
@@ -85,14 +83,14 @@ public class DynamicMBeanWrapperTest {
 
         MBeanInfo mBeanInfo = DynamicMBeanWrapper.wrap(bean, beanManager).getMBeanInfo();
 
-        assertThat(mBeanInfo.getAttributes().length, is(1));
-        assertThat(mBeanInfo.getAttributes()[0].getName(), is("name"));
-        assertThat(mBeanInfo.getAttributes()[0].getType(), is(String.class.getName()));
-        assertThat(mBeanInfo.getAttributes()[0].isReadable(), is(false));
-        assertThat(mBeanInfo.getAttributes()[0].isWritable(), is(true));
-        assertThat(mBeanInfo.getAttributes()[0].isIs(), is(false));
-        assertThat(mBeanInfo.getOperations().length, is(1));
-        assertThat(mBeanInfo.getOperations()[0].getName(), is("setName"));
+        assertThat(mBeanInfo.getAttributes()).hasSize(1);
+        assertThat(mBeanInfo.getAttributes()[0].getName()).isEqualTo("name");
+        assertThat(mBeanInfo.getAttributes()[0].getType()).isEqualTo(String.class.getName());
+        assertThat(mBeanInfo.getAttributes()[0].isReadable()).isFalse();
+        assertThat(mBeanInfo.getAttributes()[0].isWritable()).isTrue();
+        assertThat(mBeanInfo.getAttributes()[0].isIs()).isFalse();
+        assertThat(mBeanInfo.getOperations()).hasSize(1);
+        assertThat(mBeanInfo.getOperations()[0].getName()).isEqualTo("setName");
     }
 
     @Test
@@ -101,13 +99,13 @@ public class DynamicMBeanWrapperTest {
 
         MBeanInfo mBeanInfo = DynamicMBeanWrapper.wrap(bean, beanManager).getMBeanInfo();
 
-        assertThat(mBeanInfo.getAttributes().length, is(1));
-        assertThat(mBeanInfo.getAttributes()[0].getName(), is("president"));
-        assertThat(mBeanInfo.getAttributes()[0].getType(), is(Person.class.getName()));
-        assertThat(mBeanInfo.getAttributes()[0].isReadable(), is(true));
-        assertThat(mBeanInfo.getAttributes()[0].isWritable(), is(false));
-        assertThat(mBeanInfo.getAttributes()[0].isIs(), is(false));
-        assertThat(mBeanInfo.getOperations()[0].getName(), is("getPresident"));
+        assertThat(mBeanInfo.getAttributes()).hasSize(1);
+        assertThat(mBeanInfo.getAttributes()[0].getName()).isEqualTo("president");
+        assertThat(mBeanInfo.getAttributes()[0].getType()).isEqualTo(Person.class.getName());
+        assertThat(mBeanInfo.getAttributes()[0].isReadable()).isTrue();
+        assertThat(mBeanInfo.getAttributes()[0].isWritable()).isFalse();
+        assertThat(mBeanInfo.getAttributes()[0].isIs()).isFalse();
+        assertThat(mBeanInfo.getOperations()[0].getName()).isEqualTo("getPresident");
     }
 
     @Test
@@ -116,14 +114,14 @@ public class DynamicMBeanWrapperTest {
 
         MBeanInfo mBeanInfo = DynamicMBeanWrapper.wrap(bean, beanManager).getMBeanInfo();
 
-        assertThat(mBeanInfo.getAttributes().length, is(1));
-        assertThat(mBeanInfo.getAttributes()[0].getName(), is("retired"));
-        assertThat(mBeanInfo.getAttributes()[0].getType(), is(boolean.class.getName()));
-        assertThat(mBeanInfo.getAttributes()[0].isReadable(), is(true));
-        assertThat(mBeanInfo.getAttributes()[0].isWritable(), is(false));
-        assertThat(mBeanInfo.getAttributes()[0].isIs(), is(true));
-        assertThat(mBeanInfo.getOperations().length, is(1));
-        assertThat(mBeanInfo.getOperations()[0].getName(), is("isRetired"));
+        assertThat(mBeanInfo.getAttributes()).hasSize(1);
+        assertThat(mBeanInfo.getAttributes()[0].getName()).isEqualTo("retired");
+        assertThat(mBeanInfo.getAttributes()[0].getType()).isEqualTo(boolean.class.getName());
+        assertThat(mBeanInfo.getAttributes()[0].isReadable()).isTrue();
+        assertThat(mBeanInfo.getAttributes()[0].isWritable()).isFalse();
+        assertThat(mBeanInfo.getAttributes()[0].isIs()).isTrue();
+        assertThat(mBeanInfo.getOperations()).hasSize(1);
+        assertThat(mBeanInfo.getOperations()[0].getName()).isEqualTo("isRetired");
     }
 
     @Test
@@ -132,8 +130,8 @@ public class DynamicMBeanWrapperTest {
 
         MBeanInfo mBeanInfo = DynamicMBeanWrapper.wrap(bean, beanManager).getMBeanInfo();
 
-        assertThat(mBeanInfo.getAttributes().length, is(0));
-        assertThat(mBeanInfo.getOperations().length, is(2));
+        assertThat(mBeanInfo.getAttributes()).isEmpty();
+        assertThat(mBeanInfo.getOperations()).hasSize(2);
     }
 
     @Test
@@ -142,8 +140,8 @@ public class DynamicMBeanWrapperTest {
 
         MBeanInfo mBeanInfo = DynamicMBeanWrapper.wrap(bean, beanManager).getMBeanInfo();
 
-        assertThat(mBeanInfo.getAttributes().length, is(0));
-        assertThat(mBeanInfo.getOperations().length, is(0));
+        assertThat(mBeanInfo.getAttributes()).isEmpty();
+        assertThat(mBeanInfo.getOperations()).isEmpty();
     }
 
     @Test
@@ -152,23 +150,23 @@ public class DynamicMBeanWrapperTest {
 
         MBeanInfo mBeanInfo = DynamicMBeanWrapper.wrap(bean, beanManager).getMBeanInfo();
 
-        assertThat(mBeanInfo.getAttributes().length, is(2));
-        assertThat(mBeanInfo.getAttributes()[0].getName(), is("population"));
-        assertThat(mBeanInfo.getAttributes()[0].getType(), is(int.class.getName()));
-        assertThat(mBeanInfo.getAttributes()[0].isReadable(), is(true));
-        assertThat(mBeanInfo.getAttributes()[0].isWritable(), is(true));
-        assertThat(mBeanInfo.getAttributes()[0].isIs(), is(false));
+        assertThat(mBeanInfo.getAttributes()).hasSize(2);
+        assertThat(mBeanInfo.getAttributes()[0].getName()).isEqualTo("population");
+        assertThat(mBeanInfo.getAttributes()[0].getType()).isEqualTo(int.class.getName());
+        assertThat(mBeanInfo.getAttributes()[0].isReadable()).isTrue();
+        assertThat(mBeanInfo.getAttributes()[0].isWritable()).isTrue();
+        assertThat(mBeanInfo.getAttributes()[0].isIs()).isFalse();
 
-        assertThat(mBeanInfo.getAttributes()[1].getName(), is("president"));
-        assertThat(mBeanInfo.getAttributes()[1].getType(), is(Person.class.getName()));
-        assertThat(mBeanInfo.getAttributes()[1].isReadable(), is(true));
-        assertThat(mBeanInfo.getAttributes()[1].isWritable(), is(false));
-        assertThat(mBeanInfo.getAttributes()[1].isIs(), is(false));
+        assertThat(mBeanInfo.getAttributes()[1].getName()).isEqualTo("president");
+        assertThat(mBeanInfo.getAttributes()[1].getType()).isEqualTo(Person.class.getName());
+        assertThat(mBeanInfo.getAttributes()[1].isReadable()).isTrue();
+        assertThat(mBeanInfo.getAttributes()[1].isWritable()).isFalse();
+        assertThat(mBeanInfo.getAttributes()[1].isIs()).isFalse();
 
-        assertThat(mBeanInfo.getOperations().length, is(3));
-        assertThat(mBeanInfo.getOperations()[0].getName(), is("setPopulation"));
-        assertThat(mBeanInfo.getOperations()[1].getName(), is("getPresident"));
-        assertThat(mBeanInfo.getOperations()[2].getName(), is("getPopulation"));
+        assertThat(mBeanInfo.getOperations()).hasSize(3);
+        assertThat(mBeanInfo.getOperations()[0].getName()).isEqualTo("setPopulation");
+        assertThat(mBeanInfo.getOperations()[1].getName()).isEqualTo("getPresident");
+        assertThat(mBeanInfo.getOperations()[2].getName()).isEqualTo("getPopulation");
     }
 
     @Test
@@ -179,7 +177,7 @@ public class DynamicMBeanWrapperTest {
 
         DynamicMBeanWrapper mBean = DynamicMBeanWrapper.wrap(bean, beanManager);
 
-        assertThat(mBean.getAttribute("name"), is("Ibrahimovic"));
+        assertThat(mBean.getAttribute("name")).isEqualTo("Ibrahimovic");
     }
 
     @Test
@@ -190,7 +188,7 @@ public class DynamicMBeanWrapperTest {
 
         DynamicMBeanWrapper mBean = DynamicMBeanWrapper.wrap(bean, beanManager);
 
-        assertThat(mBean.getAttribute("retired"), is(true));
+        assertThat(mBean.getAttribute("retired")).isEqualTo(true);
     }
 
     @Test(expected = AttributeNotFoundException.class)
@@ -223,11 +221,11 @@ public class DynamicMBeanWrapperTest {
         DynamicMBeanWrapper mBean = DynamicMBeanWrapper.wrap(bean, beanManager);
         List<Attribute> attributes = mBean.getAttributes(new String[] { "name", "age" }).asList();
 
-        assertThat(attributes.size(), is(2));
-        assertThat(attributes.get(0).getName(), is("name"));
-        assertThat(attributes.get(0).getValue(), is("Ibrahimovic"));
-        assertThat(attributes.get(1).getName(), is("age"));
-        assertThat(attributes.get(1).getValue(), is(33));
+        assertThat(attributes).hasSize(2);
+        assertThat(attributes.get(0).getName()).isEqualTo("name");
+        assertThat(attributes.get(0).getValue()).isEqualTo("Ibrahimovic");
+        assertThat(attributes.get(1).getName()).isEqualTo("age");
+        assertThat(attributes.get(1).getValue()).isEqualTo(33);
     }
 
     @Test
@@ -239,9 +237,9 @@ public class DynamicMBeanWrapperTest {
         DynamicMBeanWrapper mBean = DynamicMBeanWrapper.wrap(bean, beanManager);
         List<Attribute> attributes = mBean.getAttributes(new String[] { "name", "nationality", "height" }).asList();
 
-        assertThat(attributes.size(), is(1));
-        assertThat(attributes.get(0).getName(), is("name"));
-        assertThat(attributes.get(0).getValue(), is("Pirlo"));
+        assertThat(attributes).hasSize(1);
+        assertThat(attributes.get(0).getName()).isEqualTo("name");
+        assertThat(attributes.get(0).getValue()).isEqualTo("Pirlo");
     }
 
     @Test
@@ -251,7 +249,7 @@ public class DynamicMBeanWrapperTest {
         DynamicMBeanWrapper mBean = DynamicMBeanWrapper.wrap(bean, beanManager);
         mBean.setAttribute(new Attribute("name", "Buffon"));
 
-        assertThat(mBean.getAttribute("name"), is("Buffon"));
+        assertThat(mBean.getAttribute("name")).isEqualTo("Buffon");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -294,9 +292,9 @@ public class DynamicMBeanWrapperTest {
         AttributeList attributes = new AttributeList(asList(new Attribute("name", "Lampard"), new Attribute("age", 37)));
         AttributeList returnedAttributes = mBean.setAttributes(attributes);
 
-        assertThat(returnedAttributes.size(), is(2));
-        assertThat(mBean.getAttribute("name"), is("Lampard"));
-        assertThat(mBean.getAttribute("age"), is(37));
+        assertThat(returnedAttributes).hasSize(2);
+        assertThat(mBean.getAttribute("name")).isEqualTo("Lampard");
+        assertThat(mBean.getAttribute("age")).isEqualTo(37);
     }
 
     @Test
@@ -304,13 +302,14 @@ public class DynamicMBeanWrapperTest {
         configureBeanManagerToReturn(new Player());
 
         DynamicMBeanWrapper mBean = DynamicMBeanWrapper.wrap(bean, beanManager);
-        AttributeList attributes = new AttributeList(asList(new Attribute("name", "Drogba"), new Attribute("nationality", "Ivorian"), new Attribute("height", 1.84)));
+        AttributeList attributes = new AttributeList(asList(new Attribute("name", "Drogba"), new Attribute("nationality", "Ivorian"), new Attribute(
+                "height", 1.84)));
         List<Attribute> returnedAttributes = mBean.setAttributes(attributes).asList();
 
-        assertThat(returnedAttributes.size(), is(1));
-        assertThat(mBean.getAttribute("name"), is("Drogba"));
-        assertThat(returnedAttributes.get(0).getName(), is("name"));
-        assertThat(returnedAttributes.get(0).getValue(), is("Drogba"));
+        assertThat(returnedAttributes).hasSize(1);
+        assertThat(mBean.getAttribute("name")).isEqualTo("Drogba");
+        assertThat(returnedAttributes.get(0).getName()).isEqualTo("name");
+        assertThat(returnedAttributes.get(0).getValue()).isEqualTo("Drogba");
     }
 
     @Test
@@ -327,17 +326,18 @@ public class DynamicMBeanWrapperTest {
         DynamicMBeanWrapper mBean = DynamicMBeanWrapper.wrap(bean, beanManager);
         Object result = mBean.invoke("setName", new Object[] { "Eto'o" }, new String[] { "java.lang.String" });
 
-        assertThat(result, is(nullValue()));
-        assertThat(mBean.getAttribute("name"), is("Eto'o"));
+        assertThat(result).isNull();
+        assertThat(mBean.getAttribute("name")).isEqualTo("Eto'o");
     }
 
     @Test
     public void shouldInvokeStaticOperation() throws Exception {
         configureBeanManagerToReturn(new Math());
 
-        Object result = DynamicMBeanWrapper.wrap(bean, beanManager).invoke("max", new Object[] { new Integer(10), 50 }, new String[] { "int", "int" });
+        Object result = DynamicMBeanWrapper.wrap(bean, beanManager)
+                .invoke("max", new Object[] { new Integer(10), 50 }, new String[] { "int", "int" });
 
-        assertThat(result, is(50));
+        assertThat(result).isEqualTo(50);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -362,7 +362,8 @@ public class DynamicMBeanWrapperTest {
     // Dummy classes used by the tests above
 
     @MBean(description = "a car")
-    private static class Car {}
+    private static class Car {
+    }
 
     @MBean(description = "a fruit")
     private static class Fruit {

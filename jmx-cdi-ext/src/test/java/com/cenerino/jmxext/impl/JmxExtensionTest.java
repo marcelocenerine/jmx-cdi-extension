@@ -1,7 +1,6 @@
 package com.cenerino.jmxext.impl;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Answers.RETURNS_DEEP_STUBS;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
@@ -62,7 +61,7 @@ public class JmxExtensionTest {
 
         jmxExtension.processBean(event, beanManager);
 
-        assertThat(jmxExtension.getMBeanCount(), is(1));
+        assertThat(jmxExtension.getMBeanCount()).isEqualTo(1);
         verify(mBeanServer).registerMBean(notNull(DynamicMBeanWrapper.class), notNull(ObjectName.class));
     }
 
@@ -70,7 +69,7 @@ public class JmxExtensionTest {
     public void shouldNotRegisterClassWithoutMBeanAnnotation() throws Exception {
         jmxExtension.processBean(event, beanManager);
 
-        assertThat(jmxExtension.getMBeanCount(), is(0));
+        assertThat(jmxExtension.getMBeanCount()).isEqualTo(0);
         verifyZeroInteractions(mBeanServer);
     }
 
@@ -81,7 +80,7 @@ public class JmxExtensionTest {
 
         jmxExtension.processBean(event, beanManager);
 
-        assertThat(jmxExtension.getMBeanCount(), is(0));
+        assertThat(jmxExtension.getMBeanCount()).isEqualTo(0);
         verify(mBeanServer).registerMBean(notNull(DynamicMBeanWrapper.class), notNull(ObjectName.class));
     }
 
@@ -91,7 +90,7 @@ public class JmxExtensionTest {
 
         jmxExtension.shutdown(mock(BeforeShutdown.class));
 
-        assertThat(jmxExtension.getMBeanCount(), is(0));
+        assertThat(jmxExtension.getMBeanCount()).isEqualTo(0);
         verify(mBeanServer).unregisterMBean(notNull(ObjectName.class));
     }
 }
